@@ -17,15 +17,15 @@ public class JdbcAccountDao implements AccountDao {
     }
 
     @Override
-    public Account getBalanceByUserId(int userId) throws UserNotActivatedException {
-        String sql = "SELECT balance FROM account WHERE user_id = ?";
-        SqlRowSet rowSet = jdbcTemplate.queryForRowSet(sql, userId);
+    public Account getBalanceByUserName(String username) throws UserNotActivatedException {
+        String sql = "SELECT account_id, account.user_id, balance FROM account JOIN tenmo_user ON tenmo_user.user_id = account.user_id WHERE username = ?";
+        SqlRowSet rowSet = jdbcTemplate.queryForRowSet(sql, username);
         try {
             if (rowSet.next()) {
                 return mapRowToAccount(rowSet);
             }
         } catch (UserNotActivatedException e) {
-            e.getMessage();
+            System.err.println("didn't work" + e.getMessage());
         }
         return null;
     }
