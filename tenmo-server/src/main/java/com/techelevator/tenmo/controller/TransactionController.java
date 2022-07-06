@@ -21,8 +21,9 @@ public class TransactionController {
     private AccountDao accountDao;
     private UserDao userDao;
 
-    public TransactionController(AccountDao accountDao) {
+    public TransactionController(AccountDao accountDao, UserDao userDao) {
         this.accountDao = accountDao;
+        this.userDao = userDao;
     }
 
     @GetMapping(path = "/account")
