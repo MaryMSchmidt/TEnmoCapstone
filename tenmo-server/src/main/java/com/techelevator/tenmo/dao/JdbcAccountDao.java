@@ -30,6 +30,24 @@ public class JdbcAccountDao implements AccountDao {
         return null;
     }
 
+    @Override
+    public BigDecimal withdraw(int userId, BigDecimal amount){
+        Account account = new Account();
+        String sql = "UPDATE account SET balance = (balance - ?) WHERE user_id = ?";
+        jdbcTemplate.update(sql, amount, userId);
+
+        return null;
+    }
+
+    @Override
+    public BigDecimal deposit(int userId, BigDecimal amount) {
+        Account account = new Account();
+        String sql = "UPDATE account SET balance = (balance + ?) WHERE user_id = ?";
+        jdbcTemplate.update(sql, amount, userId);
+
+        return null;
+    }
+
     private Account mapRowToAccount(SqlRowSet rs) {
         Account account = new Account();
         account.setAccountId(rs.getInt("account_id"));
