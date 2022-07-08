@@ -3,6 +3,9 @@ package com.techelevator.tenmo.controller;
 import com.techelevator.tenmo.dao.AccountDao;
 import com.techelevator.tenmo.dao.TransferDao;
 import com.techelevator.tenmo.dao.UserDao;
+import com.techelevator.tenmo.exception.TransferInvalidCreationException;
+import com.techelevator.tenmo.exception.TransferNotFoundException;
+import com.techelevator.tenmo.exception.UserNotFoundException;
 import com.techelevator.tenmo.model.Account;
 import com.techelevator.tenmo.model.Transfer;
 import com.techelevator.tenmo.model.TransferDTO;
@@ -34,7 +37,6 @@ public class TEnmoController {
         return accountDao.getBalanceByUserName(principal.getName());
     }
 
-    @PreAuthorize("permitAll")
     @GetMapping(path = "/users")
     public List<User> userList() {
         return userDao.findAll();
@@ -42,7 +44,7 @@ public class TEnmoController {
 
 
     @PostMapping(path = "/transfer")
-    public void transfer(@Valid @RequestBody TransferDTO newTransfer, Principal principal) {
+    public void transfer(@Valid @RequestBody TransferDTO newTransfer, Principal principal){
         int verifyAmount = (newTransfer.getAmount().compareTo(accountDao.getBalanceAmountByUserName(principal.getName())));
         int verifyGreaterThanZero = newTransfer.getAmount().compareTo(BigDecimal.ZERO);
 
@@ -56,12 +58,12 @@ public class TEnmoController {
     }
 
     @GetMapping(path = "/transfer")
-    public List<Transfer> transferList(Principal principal) {
+    public List<Transfer> transferList(Principal principal) throws UserNotFoundException {
         return transferDao.findYourTransfers(userDao.findIdByUsername(principal.getName()));
     }
 
     @GetMapping(path = "/transfer/{transferId}")
-    public Transfer transferById(@PathVariable Integer transferId) {
+    public Transfer transferById(@PathVariable Integer transferId) throws TransferNotFoundException {
         return transferDao.findTransferByTransferId(transferId);
     }
 

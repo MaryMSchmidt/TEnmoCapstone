@@ -1,5 +1,8 @@
 package com.techelevator.tenmo.dao;
 
+import com.techelevator.tenmo.exception.TransferInvalidCreationException;
+import com.techelevator.tenmo.exception.TransferNotFoundException;
+import com.techelevator.tenmo.exception.UserNotFoundException;
 import com.techelevator.tenmo.model.Transfer;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.SqlInOutParameter;
@@ -28,31 +31,47 @@ public class JdbcTransferDao implements TransferDao {
                 " VALUES (?, ?, ?) RETURNING transfer_id";
         Integer newTransferId;
         newTransferId = jdbcTemplate.queryForObject(sql, Integer.class, toUserId, amount, fromUserId);
-       return newTransferId;
+
+            return newTransferId;
+
 
     }
 
     @Override
-    public List<Transfer> findYourTransfers(int userId) {
+    public List<Transfer> findYourTransfers(int userId) throws UserNotFoundException{
         List<Transfer> transferList = new ArrayList<>();
         String sql = "SELECT transfer_id, to_user_id, amount, from_user_id, " +
                 "approval_status FROM transfer WHERE to_user_id = ? OR from_user_id = ?;";
         SqlRowSet results = jdbcTemplate.queryForRowSet(sql, userId, userId);
+        boolean userIdExists = false;
         while (results.next()) {
             Transfer transfer = mapRowToTransfer(results);
             transferList.add(transfer);
+        }
+        for (Transfer transfer : transferList) {
+            if (transfer.getToUserId() == userId || transfer.getFromUserId() == userId) {
+                userIdExists = true;
+                break;
+            }
+        }
+        if (!userIdExists) {
+            throw new UserNotFoundException();
         }
         return transferList;
     }
 
     @Override
-    public Transfer findTransferByTransferId(Integer transferId) {
+    public Transfer findTransferByTransferId(Integer transferId) throws TransferNotFoundException {
         Transfer transferById = new Transfer();
         String sql = "SELECT transfer_id, to_user_id, amount, from_user_id, " +
                 "approval_status FROM transfer WHERE transfer_id = ?";
         SqlRowSet results = jdbcTemplate.queryForRowSet(sql, transferId);
+        boolean transferExists = false;
         if (results.next()) {
             transferById = mapRowToTransfer(results);
+            transferExists = true;
+        } else {
+            throw new TransferNotFoundException();
         }
         return transferById;
     }
