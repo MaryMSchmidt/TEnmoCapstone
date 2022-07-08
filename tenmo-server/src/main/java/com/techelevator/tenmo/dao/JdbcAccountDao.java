@@ -29,6 +29,14 @@ public class JdbcAccountDao implements AccountDao {
         }
         return null;
     }
+    @Override
+    public BigDecimal getBalanceAmountByUserName(String username) throws UserNotActivatedException {
+        String sql = "SELECT balance FROM account JOIN tenmo_user ON tenmo_user.user_id = account.user_id WHERE username = ?";
+        BigDecimal amount = (jdbcTemplate.queryForObject(sql, BigDecimal.class,username));
+
+        return amount;
+    }
+
 
     @Override
     public BigDecimal withdraw(int userId, BigDecimal amount){
