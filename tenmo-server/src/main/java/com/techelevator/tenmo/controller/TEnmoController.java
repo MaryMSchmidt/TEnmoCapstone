@@ -44,7 +44,7 @@ public class TEnmoController {
 
 
     @PostMapping(path = "/transfer")
-    public void transfer(@Valid @RequestBody TransferDTO newTransfer, Principal principal){
+    public void transfer(@Valid @RequestBody TransferDTO newTransfer, Principal principal) throws UserNotFoundException {
         int verifyAmount = (newTransfer.getAmount().compareTo(accountDao.getBalanceAmountByUserName(principal.getName())));
         int verifyGreaterThanZero = newTransfer.getAmount().compareTo(BigDecimal.ZERO);
 
@@ -53,7 +53,7 @@ public class TEnmoController {
             accountDao.withdraw(userDao.findIdByUsername(principal.getName()), newTransfer.getAmount());
             accountDao.deposit(newTransfer.getToUserId(), newTransfer.getAmount());
         } else {
-            System.out.println("Transfer amount must be greater than 0 and not exceed your current balance");
+            System.out.println("Transfer amount must be a valid number greater than 0 and not exceed your current balance");
         }
     }
 
@@ -63,8 +63,13 @@ public class TEnmoController {
     }
 
     @GetMapping(path = "/transfer/{transferId}")
-    public Transfer transferById(@PathVariable Integer transferId) throws TransferNotFoundException {
-        return transferDao.findTransferByTransferId(transferId);
+    public Transfer transferById(@PathVariable Integer transferId, Principal principal) throws TransferNotFoundException {
+        if ((transferDao.findFromUserIdByTransferId(transferId) == userDao.findIdByUsername(principal.getName()))) {
+            return transferDao.findTransferByTransferId(transferId);
+        } else {
+            System.out.println("Transfer ID must belong to current user");
+            throw new TransferNotFoundException();
+        }
     }
 
 }

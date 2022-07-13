@@ -1,14 +1,12 @@
 package com.techelevator.tenmo.dao;
 
-import com.techelevator.tenmo.exception.TransferInvalidCreationException;
 import com.techelevator.tenmo.exception.TransferNotFoundException;
 import com.techelevator.tenmo.exception.UserNotFoundException;
 import com.techelevator.tenmo.model.Transfer;
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.SqlInOutParameter;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.PathVariable;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -24,21 +22,20 @@ public class JdbcTransferDao implements TransferDao {
     }
 
 
-
     @Override
-    public int createTransfer(int toUserId, BigDecimal amount, int fromUserId) {
+    public int createTransfer(int toUserId, BigDecimal amount, int fromUserId) throws UserNotFoundException {
         String sql = "INSERT INTO transfer(to_user_id, amount, from_user_id)" +
                 " VALUES (?, ?, ?) RETURNING transfer_id";
         Integer newTransferId;
         newTransferId = jdbcTemplate.queryForObject(sql, Integer.class, toUserId, amount, fromUserId);
 
-            return newTransferId;
+        return newTransferId;
 
 
     }
 
     @Override
-    public List<Transfer> findYourTransfers(int userId) throws UserNotFoundException{
+    public List<Transfer> findYourTransfers(int userId) throws UserNotFoundException {
         List<Transfer> transferList = new ArrayList<>();
         String sql = "SELECT transfer_id, to_user_id, amount, from_user_id, " +
                 "approval_status FROM transfer WHERE to_user_id = ? OR from_user_id = ?;";
@@ -76,6 +73,24 @@ public class JdbcTransferDao implements TransferDao {
         return transferById;
     }
 
+    @Override
+    public int findFromUserIdByTransferId(int transferId) {
+        String sql = "SELECT from_user_id FROM transfer WHERE transfer_id = ?;";
+        Integer id= 0;
+        try {
+            id = jdbcTemplate.queryForObject(sql, Integer.class, transferId);
+            if (id != null) {
+                return id;
+            } else {
+                return -1;
+            }
+        } catch (IncorrectResultSizeDataAccessException e) {
+            System.out.println("Please put in a valid transfer ID");
+        }
+        return id;
+    }
+
+
     private Transfer mapRowToTransfer(SqlRowSet rs) {
         Transfer transfer = new Transfer();
         transfer.setTransferId(rs.getInt("transfer_id"));
@@ -85,8 +100,6 @@ public class JdbcTransferDao implements TransferDao {
         transfer.setApprovalStatus(rs.getBoolean("approval_status"));
         return transfer;
     }
-
-
 
 
 }
