@@ -7,6 +7,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 public class UserNotFoundException extends Exception{
     public UserNotFoundException() {
-        super("Transfer not found");
+        super("User not found");
     }
 }
